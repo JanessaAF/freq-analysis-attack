@@ -109,11 +109,10 @@ def monoAlphabetic():
 def shift():
 
 
-def vigenere():
-
 if MODE == "MONOALPHABETIC":
     monoAlphabetic()
-elif MODE == "SHIFT":
-    shift()
-elif MODE == "VIGENERE":
-    vigenere()
+else:
+    if MODE == "SHIFT":
+        #build stream
+    for
+        shift(stream)
