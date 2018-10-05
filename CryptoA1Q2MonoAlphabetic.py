@@ -13,7 +13,7 @@ class Frequency:
     def __repr__(self):
         return self.letter + ': ' + str(self.frequency)
 
-MODE = "SHIFT" #"VIGENERE"/"SHIFT"/"MONOALPHABETIC"
+MODE = "VIGENERE" #"VIGENERE"/"SHIFT"/"MONOALPHABETIC"
 FREQUENCY_SUM_OF_SQUARES = 0.065
 
 ENGLISH_LETTER_FREQUENCIES = [
@@ -47,34 +47,36 @@ ENGLISH_LETTER_FREQUENCIES = [
 
 CIPHERTEXT = "JGRMQOYGHMVBJWRWQFPWHGFFDQGFPFZRKBEEBJIZQQOCIBZKLFAFGQVFZFWWEOGWOPFGFHWOLPHLRLOLFDMFGQWBLWBWQOLKFWBYLBLYLFSFLJGRMQBOLWJVFPFWQVHQWFFPQOQVFPQOCFPOGFWFJIGFQVHLHLROQVFGWJVFPFOLFHGQVQVFILEOGQILHQFQGIQVVOSFAFGBWQVHQWIJVWJVFPFWHGFIWIHZZRQGBABHZQOCGFHX"
 
-frequencyList = [
-   Frequency('A', 0),
-   Frequency('B', 0),
-   Frequency('C', 0),
-   Frequency('D', 0),
-   Frequency('E', 0),
-   Frequency('F', 0),
-   Frequency('G', 0),
-   Frequency('H', 0),
-   Frequency('I', 0),
-   Frequency('J', 0),
-   Frequency('K', 0),
-   Frequency('L', 0),
-   Frequency('M', 0),
-   Frequency('N', 0),
-   Frequency('O', 0),
-   Frequency('P', 0),
-   Frequency('Q', 0),
-   Frequency('R', 0),
-   Frequency('S', 0),
-   Frequency('T', 0),
-   Frequency('U', 0),
-   Frequency('V', 0),
-   Frequency('W', 0),
-   Frequency('X', 0),
-   Frequency('Y', 0),
-   Frequency('Z', 0),
-]
+frequencyList = '';
+def emptyFreqList():
+    return [
+        Frequency('A', 0),
+        Frequency('B', 0),
+        Frequency('C', 0),
+        Frequency('D', 0),
+        Frequency('E', 0),
+        Frequency('F', 0),
+        Frequency('G', 0),
+        Frequency('H', 0),
+        Frequency('I', 0),
+        Frequency('J', 0),
+        Frequency('K', 0),
+        Frequency('L', 0),
+        Frequency('M', 0),
+        Frequency('N', 0),
+        Frequency('O', 0),
+        Frequency('P', 0),
+        Frequency('Q', 0),
+        Frequency('R', 0),
+        Frequency('S', 0),
+        Frequency('T', 0),
+        Frequency('U', 0),
+        Frequency('V', 0),
+        Frequency('W', 0),
+        Frequency('X', 0),
+        Frequency('Y', 0),
+        Frequency('Z', 0),
+    ]
 
 def sortByFrequency(x):
     return -x.frequency
@@ -117,15 +119,19 @@ def sumOfSquares(array):
 def shiftLetters(stream, offset):
     newStream = ''
     for i in stream:
-        asciiVal = ord(stream[i]) + offset
-        if asciiVal > ord('z'):
-            asciiVal = asciiVal - ord('z') % 26 + (ord('a') - 1)
-        newStream[i] = chr(asciiVal)
+        asciiVal = ord(i) + offset
+        if offset == 23:
+            print(i, asciiVal, ord(i), offset)
+        if asciiVal > ord('Z'):
+            asciiVal = (asciiVal - ord('Z')) % 26 + (ord('A') - 1)
+            if offset == 23:
+                print(asciiVal)
+        newStream += chr(asciiVal)
     return newStream
 
 def findLetter(char):
     for charFrequency in ENGLISH_LETTER_FREQUENCIES:
-        if char == str.lower(charFrequency.letter)
+        if char == str.upper(charFrequency.letter):
             return charFrequency
 
 def shiftCipher(stream):
@@ -133,27 +139,33 @@ def shiftCipher(stream):
     closestFreq = 1
 
     #for all j (potential offset aka potential value of k)
-    for j in range(0,25):
+    for j in range(0,26):
+        frequencyList = emptyFreqList()
 
         shiftedStream = shiftLetters(stream, j)
+        if j == 23:
+            print(shiftedStream)
+            print(stream)
         #get frequency
         for i in shiftedStream:
-            for j in frequencyList:
-                if j.equals(i):
-                    j.increment()
-
-        print(frequencyList)
-
-        for j in frequencyList:
-            j.convertToDecimal(len(stream))
+            for freq in frequencyList:
+                if freq.equals(i):
+                    freq.increment()
+        
+        for freq in frequencyList:
+            freq.convertToDecimal(len(stream))
         #calculate i sub j for every letter?
         frequencyCalc = 0
         for char in frequencyList:
             equivChar = findLetter(char.letter)
+            if j == 23:
+                print(equivChar, char)
             frequencyCalc = frequencyCalc + (equivChar.frequency * char.frequency)
+        if j == 23:
+            print(frequencyCalc)
         #if calculation is closer to the frequency of english letters sum of squares
         # keep track of that calculation and our current best option for the shift
-        if FREQUENCY_SUM_OF_SQUARES - abs(frequencyCalc) < closesetFreq:
+        if FREQUENCY_SUM_OF_SQUARES - abs(frequencyCalc) < closestFreq:
             closestFreq = FREQUENCY_SUM_OF_SQUARES - abs(frequencyCalc)
             closestFreqOffset = j
     #return most likely value
@@ -161,15 +173,24 @@ def shiftCipher(stream):
 
 if MODE == "MONOALPHABETIC":
     monoAlphabetic()
-elif MODE === "VIGENERE":
+elif MODE == "VIGENERE":
+    encryptedStream = "P QFCSQYUEI KCGW ABT BSNAOUN VSJPC DV QGJYP TOZCSF TC OBPNIFS MWCPXT JX L KOSZRPSESSUYS VSTL YM U SJXNGEYMT JS HJSACCH IPSVPHV XNEZ K WUGUNNMVHL EPNYL YY CSFF L HKYUVSFAZ MVHHJXEK YM ICF TC EYYY HFSEWXJYHUMZMQO HDU WPIEPLTE GJ LRL MNOYLP YM UCZ QLFQBUVF ULJKNLPQMD SBL OHVFWDI HH TYUPUDLX EBWE GP MIGNFW OBPNXOL FKOK ND PWRSXPTT MTYYOY JGPXP";
+    encryptedStream = encryptedStream.replace(" ", "")
     #for each possible key length 1 to m length
-    #for each
-    streamArr = "";
-    #split streams
-        #need to increment for vigenere though: key length = 1,2,3,4...
-    for stream in streamArr:
-        shift(stream)
+    for i in range(1, len(encryptedStream)):
+        #for each key length, generate streams
+        streamArr = []
+        for j in range(0, i + 1):
+            print(j)
+            streamArr.append([])
+            for k in range(j, len(encryptedStream), i):
+                streamArr[j].append(encryptedStream[k])
+
+        print(streamArr)
+        for stream in streamArr:
+            print(shiftCipher(stream))
     #generate sum of squares
-elif MODE === "SHIFT":
-    streamArr == "this is a sentence"
-    shiftCipher(streamArr)
+elif MODE == "SHIFT":
+    streamArr = "D SDUDJUDSK IURP WKH DQFLHQW JUHHN WR ZULWH EHVLGH RU ZULWWHQ EHVLGH LV D VHOIFRQWDLQHG XQLW RI D GLVFRXUVH LQ ZULWLQJ GHDOLQJ ZLWK D SDUWLFXODU SRLQW RU LGHD D SDUDJUDSK FRQVLVWV RI RQH RU PRUH VHQWHQFHVWKRXJK QRW UHTXLUHG EB WKH VBQWDA RI DQB ODQJXDJH SDUDJUDSKV DUH XVXDOOB DQ HASHFWHG SDUW RI IRUPDO ZULWLQJ XVHG WR RUJDQLCH ORQJHU SURVH"
+    streamArr = streamArr.replace(" ", "")
+    print(shiftCipher(streamArr))
