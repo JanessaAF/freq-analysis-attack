@@ -1,0 +1,1 @@
+To run in linux, python ./[directory]/freqAnalysisAttacks.py. Change MODE at the top to run in "SHIFT" or "VIGENERE" mode for Q1, and  "MONOALPHABETIC" for Q2.

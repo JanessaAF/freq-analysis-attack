@@ -13,8 +13,14 @@ class Frequency:
     def __repr__(self):
         return self.letter + ': ' + str(self.frequency)
 
+class ShiftResult:
+    def __init__(self, offset, frequencyCalc):
+        self.offset = offset
+        self.frequencyCalc = frequencyCalc
+
 MODE = "VIGENERE" #"VIGENERE"/"SHIFT"/"MONOALPHABETIC"
 FREQUENCY_SUM_OF_SQUARES = 0.065
+ACCEPTABLE_DEVIANCE = 0.008
 
 ENGLISH_LETTER_FREQUENCIES = [
     Frequency('e', 0.127),
@@ -84,6 +90,8 @@ def sortByFrequency(x):
 
 # main program
 def monoAlphabetic():
+    frequencyList = emptyFreqList()
+
     for i in CIPHERTEXT:
         for j in frequencyList:
             if j.equals(i):
@@ -92,7 +100,7 @@ def monoAlphabetic():
     print(frequencyList)
 
     for j in frequencyList:
-        j.convertToPercentage(len(CIPHERTEXT))
+        j.convertToDecimal(len(CIPHERTEXT))
 
     frequencyList = sorted(frequencyList, key=sortByFrequency)
     print(frequencyList)
@@ -104,35 +112,36 @@ def monoAlphabetic():
             if j == currLetter:
     #            print("Currletter:" + currLetter + "  " + j + "  " + str(j == currLetter))
                 plaintext[index2] = ENGLISH_LETTER_FREQUENCIES[index].letter
-        print(''.join(plaintext))
+        if index == 10: 
+            print(''.join(plaintext))
     print()
     print(''.join(plaintext))
 
 
 def sumOfSquares(array):
-    result = 0;
+    result = 0
     for i in array:
         result = result + (array[i]**2)
     return result
-#shift and monoalphabetic shouldnt make a difference?
 
+#
+# shift all characters in the stream over by the offset,wrap around if needed 
+#
 def shiftLetters(stream, offset):
     newStream = ''
     for i in stream:
         asciiVal = ord(i) + offset
-        if offset == 23:
-            print(i, asciiVal, ord(i), offset)
         if asciiVal > ord('Z'):
             asciiVal = (asciiVal - ord('Z')) % 26 + (ord('A') - 1)
-            if offset == 23:
-                print(asciiVal)
         newStream += chr(asciiVal)
     return newStream
 
+#finds equiv letter in standard frequency array vs our frequency array
 def findLetter(char):
     for charFrequency in ENGLISH_LETTER_FREQUENCIES:
         if char == str.upper(charFrequency.letter):
             return charFrequency
+
 
 def shiftCipher(stream):
     closestFreqOffset = 0
@@ -143,9 +152,6 @@ def shiftCipher(stream):
         frequencyList = emptyFreqList()
 
         shiftedStream = shiftLetters(stream, j)
-        if j == 23:
-            print(shiftedStream)
-            print(stream)
         #get frequency
         for i in shiftedStream:
             for freq in frequencyList:
@@ -158,38 +164,54 @@ def shiftCipher(stream):
         frequencyCalc = 0
         for char in frequencyList:
             equivChar = findLetter(char.letter)
-            if j == 23:
-                print(equivChar, char)
             frequencyCalc = frequencyCalc + (equivChar.frequency * char.frequency)
-        if j == 23:
-            print(frequencyCalc)
         #if calculation is closer to the frequency of english letters sum of squares
         # keep track of that calculation and our current best option for the shift
-        if FREQUENCY_SUM_OF_SQUARES - abs(frequencyCalc) < closestFreq:
-            closestFreq = FREQUENCY_SUM_OF_SQUARES - abs(frequencyCalc)
+        if abs(FREQUENCY_SUM_OF_SQUARES - frequencyCalc) < abs(FREQUENCY_SUM_OF_SQUARES - closestFreq):
+            closestFreq = abs(FREQUENCY_SUM_OF_SQUARES - frequencyCalc)
             closestFreqOffset = j
     #return most likely value
-    return closestFreqOffset
+    return ShiftResult(closestFreqOffset, closestFreq)
 
 if MODE == "MONOALPHABETIC":
     monoAlphabetic()
 elif MODE == "VIGENERE":
-    encryptedStream = "P QFCSQYUEI KCGW ABT BSNAOUN VSJPC DV QGJYP TOZCSF TC OBPNIFS MWCPXT JX L KOSZRPSESSUYS VSTL YM U SJXNGEYMT JS HJSACCH IPSVPHV XNEZ K WUGUNNMVHL EPNYL YY CSFF L HKYUVSFAZ MVHHJXEK YM ICF TC EYYY HFSEWXJYHUMZMQO HDU WPIEPLTE GJ LRL MNOYLP YM UCZ QLFQBUVF ULJKNLPQMD SBL OHVFWDI HH TYUPUDLX EBWE GP MIGNFW OBPNXOL FKOK ND PWRSXPTT MTYYOY JGPXP";
+    #note: key = "mycipher"
+    encryptedStream = "NCHWGLCFGACVQLKZZRQLTAIIYGPMLOEKFFGKDTTFEGVQDUSWMNCZIPGLXYTXPYEXDYRPLPPCNCAWJTYJFDKZHAHVOGFMDUEEMPICBLRKMLFILVVBULIBWLWZEQVIILQVZRHWGFSLDNCXTYAYMRKAIOIDAQVQBWSIFYPBXKIRFFCBNVYRDCVZNPRXFMEWCCIPFMAWJYVVMBGZIOIZZDQZBHXZALKVTHGYBYTIVYEGTKWAIIIIQJCBTKXFFFCBXKIRULQBWLVNAPFANVYIBYTIVYEGTQUPDBPUDCOQCKCFGPTMPKIIFFCBIOIIQGUIGLGLDPGVIYICMRKWCZLZBZGBLLIEKMWZIOIJUQCVSALVULHWGTEKUMPQCLETTNCZPNVRBFCEDYOZZEVPTZMJRSPKIPSEEJKSTHWVQBHZDTAYUAJGDBVGMNGZPUHPASTQSLEJIGNTVYSNFFGEWVPVBPQKTZWZEYPWGNEEUAQVTHRRFSTIAWVFSPGAHPSERPQUPZIVPRQIUBPCNJQECWEGQPYPTYIKTCTMPYIUUPGKIMEDUJKIAYICMRKWCZLZBQDMIDIVZYNTDMXYQGFMPZMEFFGXPWIIFFGLTJMJUMPIQVYKIFCBIVTLFGPBDFSLDNCZPNVRBFUJTNMEEUKBWALVSCTUXUEKUMPWUHWVQBQNXKIRERJQHNIIYGPIIPSEBPQKTZWZEZGBILVBZMYVPZFIMGPAIVVDULIBWLVVMPGUPUCKQAJVXXYVEDQZQYEZZQVWGTMESUJQROIMQPQVTFSLOFQWHLXYUQUBPNIFRNCZPNVRBFFMKLPFBKGVIJEEZMVJTZOZBNGLQBMCPGPOEHVRSPCXWZGRZZGTXRISGGNLXUKREIAARYEGQPVPTYIDGQVJTHAVXJRTPURVPDQCCKEKUMPBWHXJGNRWGAWNTYVGDBEIQZWQAKMESYPGRYETWQKVRVRJUQVMCJMVEMTWIOIIOMTZJWXZALUWUALVRMWVSHXZALEICJELECAWJYAYAJGXPWIIFMEZJTFCQQQTTAWJGNRWHLXYMRAWJOEMQBQVTZSDQZTIXUWKAPOQCNXFPCXMAVTPASTBWLWZEUJIILPJQQJWJSHPASMMTWMEYGPLPZCFGZGOXUXFOPGIILTRDYIZPWLJQTGZNWEIMETIEOMEMNCXTYWYASNLQL"
     encryptedStream = encryptedStream.replace(" ", "")
+
+    resultArr = []
+    bestOption = 0
     #for each possible key length 1 to m length
     for i in range(1, len(encryptedStream)):
         #for each key length, generate streams
         streamArr = []
-        for j in range(0, i + 1):
-            print(j)
+        for j in range(0, i):
             streamArr.append([])
             for k in range(j, len(encryptedStream), i):
                 streamArr[j].append(encryptedStream[k])
-
-        print(streamArr)
+                #returns separated streams
+        #applies shift cipher calculations to individual streams per key size
         for stream in streamArr:
-            print(shiftCipher(stream))
-    #generate sum of squares
+            if i == 8:
+                print(stream, len(streamArr))
+            result = shiftCipher(stream)
+            #if close to our target, discard the other one being held, otherwise move on to the next possible key length
+            if abs(FREQUENCY_SUM_OF_SQUARES - result.frequencyCalc) > ACCEPTABLE_DEVIANCE:
+                resultArr = []
+                if i == 8:
+                    print(result.offset, result.frequencyCalc)
+                break
+            bestOption = result.frequencyCalc
+            resultArr.append(result.offset)
+            print(resultArr, result.offset, result.frequencyCalc, i)
+        #if we got through the length of the key and all the distributions were acceptable, consider that the key
+        if len(resultArr) == i:
+            break
+    print("Key: " + str(resultArr))
+            
+
+
 elif MODE == "SHIFT":
     streamArr = "D SDUDJUDSK IURP WKH DQFLHQW JUHHN WR ZULWH EHVLGH RU ZULWWHQ EHVLGH LV D VHOIFRQWDLQHG XQLW RI D GLVFRXUVH LQ ZULWLQJ GHDOLQJ ZLWK D SDUWLFXODU SRLQW RU LGHD D SDUDJUDSK FRQVLVWV RI RQH RU PRUH VHQWHQFHVWKRXJK QRW UHTXLUHG EB WKH VBQWDA RI DQB ODQJXDJH SDUDJUDSKV DUH XVXDOOB DQ HASHFWHG SDUW RI IRUPDO ZULWLQJ XVHG WR RUJDQLCH ORQJHU SURVH"
     streamArr = streamArr.replace(" ", "")
